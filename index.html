@@ -45,7 +45,6 @@
       font-size: 1.1rem;
       color: #ffd700;
     }
-
     .balance-bar span { font-size: 1.4rem; font-weight: bold; }
 
     /* ── Betting board ── */
@@ -55,7 +54,7 @@
       gap: 10px;
       width: 100%;
       max-width: 480px;
-      margin-bottom: 22px;
+      margin-bottom: 10px;
     }
 
     .cell {
@@ -63,10 +62,12 @@
       border: 3px solid #8b6800;
       border-radius: 14px;
       cursor: pointer;
-      padding: 10px 6px 8px;
+      padding: 14px 6px 10px;
+      min-height: 90px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
       user-select: none;
@@ -97,6 +98,16 @@
       text-align: center;
     }
 
+    /* ── Odds hint ── */
+    .odds-hint {
+      font-size: 0.75rem;
+      color: #ffdd88;
+      text-align: center;
+      margin-bottom: 16px;
+      opacity: 0.85;
+      letter-spacing: 0.5px;
+    }
+
     /* ── Bet controls ── */
     .controls {
       display: flex;
@@ -114,22 +125,31 @@
       color: #ffd700;
       font-weight: bold;
       font-size: 0.9rem;
-      padding: 6px 14px;
+      padding: 0 18px;
+      min-height: 44px;
       border-radius: 50px;
       cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
+      transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
     }
     .chip-btn:hover { transform: scale(1.08); box-shadow: 0 0 10px #ffd700; }
+    .chip-btn.active {
+      background: linear-gradient(145deg, #ff8800, #ffcc00);
+      color: #4a0000;
+      box-shadow: 0 0 12px #ffcc00;
+      transform: scale(1.06);
+    }
 
     .action-row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       justify-content: center;
+      flex-wrap: wrap;
       margin-bottom: 22px;
     }
 
     .btn {
-      padding: 10px 28px;
+      padding: 10px 20px;
+      min-height: 44px;
       font-size: 1rem;
       font-weight: bold;
       border-radius: 10px;
@@ -146,7 +166,9 @@
       font-size: 1.1rem;
       padding: 12px 36px;
     }
-    .btn-clear { background: #555; color: #eee; }
+    .btn-clear  { background: #555; color: #eee; }
+    .btn-double { background: linear-gradient(135deg, #6600cc, #aa00ff); color: #fff; border: 2px solid #ffd700; }
+    .btn-allin  { background: linear-gradient(135deg, #cc0044, #ff0066); color: #fff; border: 2px solid #ffd700; }
 
     /* ── Dice ── */
     .dice-area {
@@ -170,9 +192,7 @@
       transition: transform 0.1s;
     }
 
-    .die.rolling {
-      animation: shake 0.6s ease-in-out;
-    }
+    .die.rolling { animation: shake 0.6s ease-in-out; }
 
     @keyframes shake {
       0%,100% { transform: rotate(0deg) scale(1); }
@@ -220,7 +240,7 @@
     .history h3 { color: #ffd700; margin-bottom: 6px; font-size: 0.85rem; }
     .history .row { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
 
-    /* ── Confetti (CSS only) ── */
+    /* ── Confetti ── */
     .confetti-container {
       pointer-events: none;
       position: fixed;
@@ -249,19 +269,59 @@
       color: #ffd700;
       font-weight: bold;
       font-size: 0.85rem;
-      padding: 6px 12px;
+      padding: 0 14px;
+      min-height: 44px;
       border-radius: 50px;
       cursor: pointer;
       z-index: 1000;
       transition: transform 0.1s, box-shadow 0.1s;
     }
     .music-btn:hover { transform: scale(1.08); box-shadow: 0 0 10px #ffd700; }
+
+    /* ── Game Over Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: linear-gradient(160deg, #7a0000, #3a0000);
+      border: 3px solid #ffd700;
+      border-radius: 20px;
+      padding: 32px 36px;
+      text-align: center;
+      max-width: 320px;
+      width: 90%;
+      box-shadow: 0 0 40px rgba(255,100,0,0.4);
+    }
+    .modal-icon { font-size: 3rem; margin-bottom: 10px; }
+    .modal-title { font-size: 1.5rem; color: #ffd700; font-weight: bold; margin-bottom: 8px; }
+    .modal-msg { color: #ffdd88; font-size: 0.95rem; margin-bottom: 24px; }
+    .modal-btns { display: flex; gap: 12px; justify-content: center; }
   </style>
 </head>
 <body>
 
 <div class="confetti-container" id="confetti"></div>
-<button class="music-btn" id="musicBtn" onclick="toggleMusic()">🔇 Nhạc</button>
+<button class="music-btn" id="musicBtn" onclick="toggleMusic()" aria-label="Bật/tắt nhạc nền">🔇 Nhạc</button>
+
+<!-- Game Over Modal -->
+<div class="modal-overlay" id="gameOverModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-box">
+    <div class="modal-icon">💸</div>
+    <div class="modal-title" id="modalTitle">Hết xu rồi!</div>
+    <div class="modal-msg">Bạn có muốn chơi lại không?</div>
+    <div class="modal-btns">
+      <button class="btn btn-roll" onclick="confirmRestart()">Chơi lại</button>
+      <button class="btn btn-clear" onclick="closeModal()">Thôi</button>
+    </div>
+  </div>
+</div>
 
 <h1>🎊 Bầu Cua Tôm Cá 🎊</h1>
 <p class="subtitle">Chúc Mừng Năm Mới • Happy Tết!</p>
@@ -269,72 +329,88 @@
 <div class="balance-bar">💰 Số dư: <span id="balance">1000</span> xu</div>
 
 <!-- Board -->
-<div class="board" id="board"></div>
+<div class="board" id="board" role="group" aria-label="Bảng chọn con vật"></div>
+
+<!-- Odds hint -->
+<p class="odds-hint">🎲 1 xúc xắc = thắng 1× &nbsp;•&nbsp; 2 xúc xắc = 2× &nbsp;•&nbsp; 3 xúc xắc = 3×</p>
 
 <!-- Chip buttons -->
 <div class="controls">
   <span style="color:#ffdd88;font-size:.85rem;align-self:center;">Đặt cược:</span>
-  <button class="chip-btn" onclick="addBet(10)">+10</button>
-  <button class="chip-btn" onclick="addBet(50)">+50</button>
-  <button class="chip-btn" onclick="addBet(100)">+100</button>
-  <button class="chip-btn" onclick="addBet(500)">+500</button>
+  <button class="chip-btn active" id="chip-10"  onclick="selectChip(10)"  aria-label="Cược 10 xu">+10</button>
+  <button class="chip-btn"        id="chip-50"  onclick="selectChip(50)"  aria-label="Cược 50 xu">+50</button>
+  <button class="chip-btn"        id="chip-100" onclick="selectChip(100)" aria-label="Cược 100 xu">+100</button>
+  <button class="chip-btn"        id="chip-500" onclick="selectChip(500)" aria-label="Cược 500 xu">+500</button>
 </div>
 
 <div class="action-row">
-  <button class="btn btn-clear" onclick="clearBets()">Xóa cược</button>
-  <button class="btn btn-roll" id="rollBtn" onclick="roll()">🎲 Lắc!</button>
+  <button class="btn btn-clear"  onclick="clearBets()">Xóa cược</button>
+  <button class="btn btn-double" onclick="doubleDown()" title="Nhân đôi tiền cược hiện tại">2×</button>
+  <button class="btn btn-allin"  onclick="betAll()" title="Cược tất cả số dư vào ô đã chọn">Tất cả</button>
+  <button class="btn btn-roll"   id="rollBtn" onclick="roll()" aria-label="Lắc xúc xắc">🎲 Lắc!</button>
 </div>
 
 <!-- Dice -->
-<div class="dice-area" id="diceArea">
-  <div class="die" id="d0">?</div>
-  <div class="die" id="d1">?</div>
-  <div class="die" id="d2">?</div>
+<div class="dice-area" id="diceArea" aria-live="polite" aria-label="Kết quả xúc xắc">
+  <div class="die" id="d0" aria-label="Xúc xắc 1">?</div>
+  <div class="die" id="d1" aria-label="Xúc xắc 2">?</div>
+  <div class="die" id="d2" aria-label="Xúc xắc 3">?</div>
 </div>
 
 <!-- Result -->
-<div class="result-banner idle" id="resultBanner">Chọn ô và đặt cược, rồi lắc!</div>
+<div class="result-banner idle" id="resultBanner" aria-live="polite">Chọn ô và đặt cược, rồi lắc!</div>
 
 <!-- History -->
-<div class="history">
+<div class="history" aria-label="Lịch sử các lượt chơi">
   <h3>📜 Lịch sử</h3>
   <div id="historyList"></div>
 </div>
 
 <script>
   const SYMBOLS = [
-    { id: 'bau',  icon: '🎃', name: 'Bầu'  },
-    { id: 'cua',  icon: '🦀', name: 'Cua'   },
-    { id: 'tom',  icon: '🦐', name: 'Tôm'   },
-    { id: 'ca',   icon: '🐟', name: 'Cá'    },
-    { id: 'ga',   icon: '🐓', name: 'Gà'    },
-    { id: 'nai',  icon: '🦌', name: 'Nai'   },
+    { id: 'bau', icon: '🎃', name: 'Bầu' },
+    { id: 'cua', icon: '🦀', name: 'Cua'  },
+    { id: 'tom', icon: '🦐', name: 'Tôm'  },
+    { id: 'ca',  icon: '🐟', name: 'Cá'   },
+    { id: 'ga',  icon: '🐓', name: 'Gà'   },
+    { id: 'nai', icon: '🦌', name: 'Nai'  },
   ];
 
   let balance = 1000;
-  let bets = {};        // { symbolId: amount }
-  let currentBet = 10;
+  let bets = {};       // { symbolId: amount }
   let rolling = false;
+  let activeChip = 10;
 
-  // Build board
+  // ── Build board ──
   const board = document.getElementById('board');
   SYMBOLS.forEach(sym => {
     const cell = document.createElement('div');
     cell.className = 'cell';
     cell.id = 'cell-' + sym.id;
-    cell.innerHTML = `
-      <div class="icon">${sym.icon}</div>
-      <div class="name">${sym.name}</div>
-    `;
+    cell.setAttribute('role', 'button');
+    cell.setAttribute('tabindex', '0');
+    cell.setAttribute('aria-label', sym.name);
+    cell.innerHTML = `<div class="icon">${sym.icon}</div><div class="name">${sym.name}</div>`;
     cell.addEventListener('click', () => selectCell(sym.id));
+    cell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') selectCell(sym.id); });
     board.appendChild(cell);
   });
 
+  // ── Chip selection ──
+  function selectChip(amount) {
+    activeChip = amount;
+    document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('chip-' + amount).classList.add('active');
+    addBet(amount);
+  }
+
+  // ── Cell toggle (with refund on deselect) ──
   function selectCell(id) {
     if (rolling) return;
     const cell = document.getElementById('cell-' + id);
-    if (bets[id]) {
-      // deselect
+    if (id in bets) {
+      balance += bets[id];
+      updateBalance();
       delete bets[id];
       cell.classList.remove('selected');
       removeBetBadge(id);
@@ -364,6 +440,38 @@
     updateBalance();
   }
 
+  // ── Double down: double current bets on all selected cells ──
+  function doubleDown() {
+    if (rolling) return;
+    const betEntries = Object.entries(bets).filter(([, v]) => v > 0);
+    if (betEntries.length === 0) { flash('Hãy đặt cược trước!'); return; }
+    const totalNeeded = betEntries.reduce((sum, [, v]) => sum + v, 0);
+    if (balance < totalNeeded) { flash('Không đủ xu để nhân đôi!'); return; }
+    balance -= totalNeeded;
+    betEntries.forEach(([id, v]) => {
+      bets[id] = v * 2;
+      updateBadge(id);
+    });
+    updateBalance();
+  }
+
+  // ── Bet all: put entire balance on selected cells evenly ──
+  function betAll() {
+    if (rolling) return;
+    const selectedIds = Object.keys(bets);
+    if (selectedIds.length === 0) { flash('Hãy chọn ô trước!'); return; }
+    if (balance <= 0) { flash('Không còn xu!'); return; }
+    const perCell = Math.floor(balance / selectedIds.length);
+    if (perCell === 0) { flash('Không đủ xu!'); return; }
+    const totalUsed = perCell * selectedIds.length;
+    balance -= totalUsed;
+    selectedIds.forEach(id => {
+      bets[id] = (bets[id] || 0) + perCell;
+      updateBadge(id);
+    });
+    updateBalance();
+  }
+
   function updateBadge(id) {
     const cell = document.getElementById('cell-' + id);
     let badge = cell.querySelector('.bet-amount');
@@ -383,7 +491,6 @@
 
   function clearBets() {
     if (rolling) return;
-    // refund
     Object.values(bets).forEach(v => balance += v);
     updateBalance();
     bets = {};
@@ -397,10 +504,8 @@
   function roll() {
     if (rolling) return;
     const betIds = Object.keys(bets).filter(id => bets[id] > 0);
-    if (betIds.length === 0) {
-      flash('Hãy đặt cược trước!');
-      return;
-    }
+    if (betIds.length === 0) { flash('Hãy đặt cược trước!'); return; }
+
     rolling = true;
     document.getElementById('rollBtn').disabled = true;
 
@@ -411,12 +516,9 @@
     const totalFrames = 18;
     const interval = setInterval(() => {
       frames++;
-      dice.forEach(d => {
-        d.textContent = SYMBOLS[Math.floor(Math.random() * 6)].icon;
-      });
+      dice.forEach(d => { d.textContent = SYMBOLS[Math.floor(Math.random() * 6)].icon; });
       if (frames >= totalFrames) {
         clearInterval(interval);
-        // Final result
         const results = [0,1,2].map(() => SYMBOLS[Math.floor(Math.random() * 6)]);
         dice.forEach((d, i) => {
           d.classList.remove('rolling');
@@ -429,36 +531,32 @@
 
   function settle(results) {
     const resultIds = results.map(r => r.id);
-    let totalWin = 0;
+    let netChange = 0;
     let winDetails = [];
 
     Object.entries(bets).forEach(([id, betAmt]) => {
       const hits = resultIds.filter(r => r === id).length;
       if (hits > 0) {
-        const won = betAmt * (hits + 1); // original bet back + hits * bet
+        const won = betAmt * (hits + 1);
         balance += won;
-        totalWin += won - betAmt; // net profit
-        winDetails.push(`${SYMBOLS.find(s=>s.id===id).icon}×${hits}`);
+        netChange += won - betAmt;
+        winDetails.push(`${SYMBOLS.find(s => s.id === id).icon}×${hits}`);
+      } else {
+        netChange -= betAmt;
       }
-      // if hits === 0, money already deducted
     });
 
     updateBalance();
 
     const diceStr = results.map(r => r.icon).join(' ');
-    let msg, type;
-    if (totalWin > 0) {
-      msg = `🎉 Thắng +${totalWin} xu! (${winDetails.join(', ')})`;
-      type = 'win';
+    if (netChange > 0) {
+      setResult('win', `🎉 Thắng +${netChange} xu! (${winDetails.join(', ')})`);
       launchConfetti();
     } else {
-      msg = `😢 Thua rồi... Xúc xắc: ${diceStr}`;
-      type = 'lose';
+      setResult('lose', `😢 Thua ${Math.abs(netChange)} xu... Xúc xắc: ${diceStr}`);
     }
-    setResult(type, msg);
-    addHistory(diceStr, totalWin);
+    addHistory(diceStr, netChange);
 
-    // reset bets UI but keep selections for next round
     bets = {};
     SYMBOLS.forEach(sym => {
       document.getElementById('cell-' + sym.id).classList.remove('selected');
@@ -469,10 +567,17 @@
     document.getElementById('rollBtn').disabled = false;
 
     if (balance <= 0) {
-      setTimeout(() => {
-        if (confirm('Hết xu rồi! Bắt đầu lại không?')) resetGame();
-      }, 800);
+      setTimeout(() => document.getElementById('gameOverModal').classList.add('open'), 800);
     }
+  }
+
+  function confirmRestart() {
+    closeModal();
+    resetGame();
+  }
+
+  function closeModal() {
+    document.getElementById('gameOverModal').classList.remove('open');
   }
 
   function setResult(type, msg) {
@@ -489,15 +594,15 @@
     const list = document.getElementById('historyList');
     const row = document.createElement('div');
     row.className = 'row';
-    const sign = net >= 0 ? '+' : '';
+    const sign = net > 0 ? '+' : '';
     const color = net > 0 ? '#7fff7f' : net < 0 ? '#ff9999' : '#fff';
     row.innerHTML = `<span style="color:${color}">${sign}${net} xu</span> — ${diceStr}`;
     list.prepend(row);
-    // keep only 10
     while (list.children.length > 10) list.removeChild(list.lastChild);
   }
 
   function resetGame() {
+    stopMusic();
     balance = 1000;
     updateBalance();
     bets = {};
@@ -522,7 +627,6 @@
   let musicOn = false;
   let loopTimer = null;
 
-  // Pentatonic scale: C5 D5 E5 G5 A5
   const NOTES = [523.25, 587.33, 659.25, 783.99, 880.00];
   const MELODY = [4,3,2,4,3,1,0,2,3,4,2,1,0,2,3,4];
   const BPM = 138;
@@ -572,32 +676,41 @@
     const ctx = getCtx();
     const now = ctx.currentTime;
     const total = MELODY.length * BEAT;
-
-    MELODY.forEach((idx, i) => {
-      playNote(ctx, NOTES[idx], now + i * BEAT, BEAT * 0.78, 0.12);
-    });
-    // Bass on every other beat
-    for (let i = 0; i < MELODY.length; i += 2) {
+    MELODY.forEach((idx, i) => playNote(ctx, NOTES[idx], now + i * BEAT, BEAT * 0.78, 0.12));
+    for (let i = 0; i < MELODY.length; i += 2)
       playNote(ctx, NOTES[0] / 2, now + i * BEAT, BEAT * 1.4, 0.07);
-    }
-    // Percussion
-    for (let i = 0; i < MELODY.length; i++) {
+    for (let i = 0; i < MELODY.length; i++)
       playDrum(ctx, now + i * BEAT, i % 2 === 0 ? 0.18 : 0.08);
-    }
-
     loopTimer = setTimeout(scheduleLoop, (total - 0.1) * 1000);
   }
 
+  function stopMusic() {
+    musicOn = false;
+    clearTimeout(loopTimer);
+    document.getElementById('musicBtn').textContent = '🔇 Nhạc';
+  }
+
   function toggleMusic() {
-    getCtx();
-    musicOn = !musicOn;
-    document.getElementById('musicBtn').textContent = musicOn ? '🔊 Nhạc' : '🔇 Nhạc';
-    if (musicOn) {
+    const btn = document.getElementById('musicBtn');
+    if (!musicOn) {
+      btn.textContent = '⏳ Nhạc';
+      getCtx();
+      musicOn = true;
       scheduleLoop();
+      btn.textContent = '🔊 Nhạc';
     } else {
-      clearTimeout(loopTimer);
+      stopMusic();
     }
   }
+
+  // Pause music when tab is hidden, resume when visible
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (musicOn && audioCtx) audioCtx.suspend();
+    } else {
+      if (musicOn && audioCtx) audioCtx.resume();
+    }
+  });
 
   function launchConfetti() {
     const container = document.getElementById('confetti');
