@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bầu Cua Tôm Cá - Tết</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #8b0000;
+      background-image:
+        radial-gradient(circle at 20% 20%, #cc0000 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, #660000 0%, transparent 50%);
+      font-family: 'Georgia', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: #ffd700;
+      text-shadow: 2px 2px 6px #000, 0 0 20px #ff8800;
+      margin-bottom: 4px;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      color: #ffdd88;
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+    }
+
+    .balance-bar {
+      background: rgba(0,0,0,0.4);
+      border: 2px solid #ffd700;
+      border-radius: 12px;
+      padding: 8px 28px;
+      margin-bottom: 18px;
+      font-size: 1.1rem;
+      color: #ffd700;
+    }
+
+    .balance-bar span { font-size: 1.4rem; font-weight: bold; }
+
+    /* ── Betting board ── */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 22px;
+    }
+
+    .cell {
+      background: linear-gradient(145deg, #cc9900, #ffdd00, #cc9900);
+      border: 3px solid #8b6800;
+      border-radius: 14px;
+      cursor: pointer;
+      padding: 10px 6px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+      user-select: none;
+      position: relative;
+    }
+
+    .cell:hover { transform: scale(1.05); box-shadow: 0 0 14px #ffd700; }
+
+    .cell.selected {
+      background: linear-gradient(145deg, #ff6600, #ffaa00, #ff6600);
+      border-color: #fff;
+      box-shadow: 0 0 18px #ffaa00, 0 0 6px #fff inset;
+    }
+
+    .cell .icon { font-size: 2.4rem; line-height: 1; }
+    .cell .name { font-size: 0.8rem; font-weight: bold; color: #4a2800; }
+
+    .cell .bet-amount {
+      position: absolute;
+      top: 4px; right: 6px;
+      background: #c00;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: bold;
+      border-radius: 8px;
+      padding: 1px 5px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* ── Bet controls ── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 18px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .chip-btn {
+      background: linear-gradient(145deg, #cc0000, #ff3300);
+      border: 2px solid #ffd700;
+      color: #ffd700;
+      font-weight: bold;
+      font-size: 0.9rem;
+      padding: 6px 14px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .chip-btn:hover { transform: scale(1.08); box-shadow: 0 0 10px #ffd700; }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 22px;
+    }
+
+    .btn {
+      padding: 10px 28px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+    .btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+
+    .btn-roll {
+      background: linear-gradient(135deg, #ffd700, #ff8800);
+      color: #4a0000;
+      font-size: 1.1rem;
+      padding: 12px 36px;
+    }
+    .btn-clear { background: #555; color: #eee; }
+
+    /* ── Dice ── */
+    .dice-area {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      margin-bottom: 20px;
+      min-height: 90px;
+    }
+
+    .die {
+      width: 80px; height: 80px;
+      background: #fff;
+      border: 3px solid #8b6800;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      transition: transform 0.1s;
+    }
+
+    .die.rolling {
+      animation: shake 0.6s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: rotate(0deg) scale(1); }
+      15%      { transform: rotate(-12deg) scale(1.1); }
+      30%      { transform: rotate(10deg) scale(0.95); }
+      45%      { transform: rotate(-8deg) scale(1.08); }
+      60%      { transform: rotate(6deg) scale(0.97); }
+      75%      { transform: rotate(-4deg) scale(1.04); }
+      90%      { transform: rotate(2deg) scale(1); }
+    }
+
+    /* ── Result banner ── */
+    .result-banner {
+      min-height: 48px;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 14px;
+      padding: 10px 18px;
+      text-align: center;
+      transition: background 0.3s;
+    }
+    .result-banner.win  { background: rgba(0,140,0,0.7); border: 2px solid #0f0; color: #afffaf; }
+    .result-banner.lose { background: rgba(140,0,0,0.7); border: 2px solid #f55; color: #ffaaaa; }
+    .result-banner.idle { background: rgba(0,0,0,0.3);   border: 2px solid #555; color: #aaa; }
+
+    /* ── History ── */
+    .history {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid #8b6800;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: #ffdd88;
+      max-height: 110px;
+      overflow-y: auto;
+    }
+    .history h3 { color: #ffd700; margin-bottom: 6px; font-size: 0.85rem; }
+    .history .row { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+
+    /* ── Confetti (CSS only) ── */
+    .confetti-container {
+      pointer-events: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      z-index: 999;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px; height: 14px;
+      border-radius: 2px;
+      animation: fall linear forwards;
+      top: -20px;
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── Music button ── */
+    .music-btn {
+      position: fixed;
+      top: 14px; right: 16px;
+      background: linear-gradient(145deg, #cc0000, #ff3300);
+      border: 2px solid #ffd700;
+      color: #ffd700;
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 50px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .music-btn:hover { transform: scale(1.08); box-shadow: 0 0 10px #ffd700; }
+  </style>
+</head>
+<body>
+
+<div class="confetti-container" id="confetti"></div>
+<button class="music-btn" id="musicBtn" onclick="toggleMusic()">🔇 Nhạc</button>
+
+<h1>🎊 Bầu Cua Tôm Cá 🎊</h1>
+<p class="subtitle">Chúc Mừng Năm Mới • Happy Tết!</p>
+
+<div class="balance-bar">💰 Số dư: <span id="balance">1000</span> xu</div>
+
+<!-- Board -->
+<div class="board" id="board"></div>
+
+<!-- Chip buttons -->
+<div class="controls">
+  <span style="color:#ffdd88;font-size:.85rem;align-self:center;">Đặt cược:</span>
+  <button class="chip-btn" onclick="addBet(10)">+10</button>
+  <button class="chip-btn" onclick="addBet(50)">+50</button>
+  <button class="chip-btn" onclick="addBet(100)">+100</button>
+  <button class="chip-btn" onclick="addBet(500)">+500</button>
+</div>
+
+<div class="action-row">
+  <button class="btn btn-clear" onclick="clearBets()">Xóa cược</button>
+  <button class="btn btn-roll" id="rollBtn" onclick="roll()">🎲 Lắc!</button>
+</div>
+
+<!-- Dice -->
+<div class="dice-area" id="diceArea">
+  <div class="die" id="d0">?</div>
+  <div class="die" id="d1">?</div>
+  <div class="die" id="d2">?</div>
+</div>
+
+<!-- Result -->
+<div class="result-banner idle" id="resultBanner">Chọn ô và đặt cược, rồi lắc!</div>
+
+<!-- History -->
+<div class="history">
+  <h3>📜 Lịch sử</h3>
+  <div id="historyList"></div>
+</div>
+
+<script>
+  const SYMBOLS = [
+    { id: 'bau',  icon: '🎃', name: 'Bầu'  },
+    { id: 'cua',  icon: '🦀', name: 'Cua'   },
+    { id: 'tom',  icon: '🦐', name: 'Tôm'   },
+    { id: 'ca',   icon: '🐟', name: 'Cá'    },
+    { id: 'ga',   icon: '🐓', name: 'Gà'    },
+    { id: 'nai',  icon: '🦌', name: 'Nai'   },
+  ];
+
+  let balance = 1000;
+  let bets = {};        // { symbolId: amount }
+  let currentBet = 10;
+  let rolling = false;
+
+  // Build board
+  const board = document.getElementById('board');
+  SYMBOLS.forEach(sym => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.id = 'cell-' + sym.id;
+    cell.innerHTML = `
+      <div class="icon">${sym.icon}</div>
+      <div class="name">${sym.name}</div>
+    `;
+    cell.addEventListener('click', () => selectCell(sym.id));
+    board.appendChild(cell);
+  });
+
+  function selectCell(id) {
+    if (rolling) return;
+    const cell = document.getElementById('cell-' + id);
+    if (bets[id]) {
+      // deselect
+      delete bets[id];
+      cell.classList.remove('selected');
+      removeBetBadge(id);
+    } else {
+      bets[id] = 0;
+      cell.classList.add('selected');
+    }
+  }
+
+  function addBet(amount) {
+    if (rolling) return;
+    const selectedIds = Object.keys(bets);
+    if (selectedIds.length === 0) {
+      flash('Hãy chọn ô trước!');
+      return;
+    }
+    const totalAdded = amount * selectedIds.length;
+    if (balance - totalAdded < 0) {
+      flash('Không đủ xu!');
+      return;
+    }
+    balance -= totalAdded;
+    selectedIds.forEach(id => {
+      bets[id] = (bets[id] || 0) + amount;
+      updateBadge(id);
+    });
+    updateBalance();
+  }
+
+  function updateBadge(id) {
+    const cell = document.getElementById('cell-' + id);
+    let badge = cell.querySelector('.bet-amount');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.className = 'bet-amount';
+      cell.appendChild(badge);
+    }
+    badge.textContent = bets[id];
+  }
+
+  function removeBetBadge(id) {
+    const cell = document.getElementById('cell-' + id);
+    const badge = cell.querySelector('.bet-amount');
+    if (badge) badge.remove();
+  }
+
+  function clearBets() {
+    if (rolling) return;
+    // refund
+    Object.values(bets).forEach(v => balance += v);
+    updateBalance();
+    bets = {};
+    SYMBOLS.forEach(sym => {
+      document.getElementById('cell-' + sym.id).classList.remove('selected');
+      removeBetBadge(sym.id);
+    });
+    setResult('idle', 'Chọn ô và đặt cược, rồi lắc!');
+  }
+
+  function roll() {
+    if (rolling) return;
+    const betIds = Object.keys(bets).filter(id => bets[id] > 0);
+    if (betIds.length === 0) {
+      flash('Hãy đặt cược trước!');
+      return;
+    }
+    rolling = true;
+    document.getElementById('rollBtn').disabled = true;
+
+    const dice = [0,1,2].map(i => document.getElementById('d'+i));
+    dice.forEach(d => { d.classList.add('rolling'); d.textContent = '🎲'; });
+
+    let frames = 0;
+    const totalFrames = 18;
+    const interval = setInterval(() => {
+      frames++;
+      dice.forEach(d => {
+        d.textContent = SYMBOLS[Math.floor(Math.random() * 6)].icon;
+      });
+      if (frames >= totalFrames) {
+        clearInterval(interval);
+        // Final result
+        const results = [0,1,2].map(() => SYMBOLS[Math.floor(Math.random() * 6)]);
+        dice.forEach((d, i) => {
+          d.classList.remove('rolling');
+          d.textContent = results[i].icon;
+        });
+        settle(results);
+      }
+    }, 60);
+  }
+
+  function settle(results) {
+    const resultIds = results.map(r => r.id);
+    let totalWin = 0;
+    let winDetails = [];
+
+    Object.entries(bets).forEach(([id, betAmt]) => {
+      const hits = resultIds.filter(r => r === id).length;
+      if (hits > 0) {
+        const won = betAmt * (hits + 1); // original bet back + hits * bet
+        balance += won;
+        totalWin += won - betAmt; // net profit
+        winDetails.push(`${SYMBOLS.find(s=>s.id===id).icon}×${hits}`);
+      }
+      // if hits === 0, money already deducted
+    });
+
+    updateBalance();
+
+    const diceStr = results.map(r => r.icon).join(' ');
+    let msg, type;
+    if (totalWin > 0) {
+      msg = `🎉 Thắng +${totalWin} xu! (${winDetails.join(', ')})`;
+      type = 'win';
+      launchConfetti();
+    } else {
+      msg = `😢 Thua rồi... Xúc xắc: ${diceStr}`;
+      type = 'lose';
+    }
+    setResult(type, msg);
+    addHistory(diceStr, totalWin);
+
+    // reset bets UI but keep selections for next round
+    bets = {};
+    SYMBOLS.forEach(sym => {
+      document.getElementById('cell-' + sym.id).classList.remove('selected');
+      removeBetBadge(sym.id);
+    });
+
+    rolling = false;
+    document.getElementById('rollBtn').disabled = false;
+
+    if (balance <= 0) {
+      setTimeout(() => {
+        if (confirm('Hết xu rồi! Bắt đầu lại không?')) resetGame();
+      }, 800);
+    }
+  }
+
+  function setResult(type, msg) {
+    const el = document.getElementById('resultBanner');
+    el.className = 'result-banner ' + type;
+    el.textContent = msg;
+  }
+
+  function updateBalance() {
+    document.getElementById('balance').textContent = balance;
+  }
+
+  function addHistory(diceStr, net) {
+    const list = document.getElementById('historyList');
+    const row = document.createElement('div');
+    row.className = 'row';
+    const sign = net >= 0 ? '+' : '';
+    const color = net > 0 ? '#7fff7f' : net < 0 ? '#ff9999' : '#fff';
+    row.innerHTML = `<span style="color:${color}">${sign}${net} xu</span> — ${diceStr}`;
+    list.prepend(row);
+    // keep only 10
+    while (list.children.length > 10) list.removeChild(list.lastChild);
+  }
+
+  function resetGame() {
+    balance = 1000;
+    updateBalance();
+    bets = {};
+    SYMBOLS.forEach(sym => {
+      document.getElementById('cell-' + sym.id).classList.remove('selected');
+      removeBetBadge(sym.id);
+    });
+    document.getElementById('historyList').innerHTML = '';
+    [0,1,2].forEach(i => document.getElementById('d'+i).textContent = '?');
+    setResult('idle', 'Chọn ô và đặt cược, rồi lắc!');
+    rolling = false;
+    document.getElementById('rollBtn').disabled = false;
+  }
+
+  function flash(msg) {
+    setResult('lose', msg);
+    setTimeout(() => setResult('idle', 'Chọn ô và đặt cược, rồi lắc!'), 1500);
+  }
+
+  // ── Background Music (Web Audio API) ──
+  let audioCtx = null;
+  let musicOn = false;
+  let loopTimer = null;
+
+  // Pentatonic scale: C5 D5 E5 G5 A5
+  const NOTES = [523.25, 587.33, 659.25, 783.99, 880.00];
+  const MELODY = [4,3,2,4,3,1,0,2,3,4,2,1,0,2,3,4];
+  const BPM = 138;
+  const BEAT = 60 / BPM;
+
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playNote(ctx, freq, t, dur, vol) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.85);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + dur);
+  }
+
+  function playDrum(ctx, t, vol) {
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.12), ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.value = 180;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    src.connect(filt);
+    filt.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(t);
+    src.stop(t + 0.12);
+  }
+
+  function scheduleLoop() {
+    if (!musicOn) return;
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const total = MELODY.length * BEAT;
+
+    MELODY.forEach((idx, i) => {
+      playNote(ctx, NOTES[idx], now + i * BEAT, BEAT * 0.78, 0.12);
+    });
+    // Bass on every other beat
+    for (let i = 0; i < MELODY.length; i += 2) {
+      playNote(ctx, NOTES[0] / 2, now + i * BEAT, BEAT * 1.4, 0.07);
+    }
+    // Percussion
+    for (let i = 0; i < MELODY.length; i++) {
+      playDrum(ctx, now + i * BEAT, i % 2 === 0 ? 0.18 : 0.08);
+    }
+
+    loopTimer = setTimeout(scheduleLoop, (total - 0.1) * 1000);
+  }
+
+  function toggleMusic() {
+    getCtx();
+    musicOn = !musicOn;
+    document.getElementById('musicBtn').textContent = musicOn ? '🔊 Nhạc' : '🔇 Nhạc';
+    if (musicOn) {
+      scheduleLoop();
+    } else {
+      clearTimeout(loopTimer);
+    }
+  }
+
+  function launchConfetti() {
+    const container = document.getElementById('confetti');
+    container.innerHTML = '';
+    const colors = ['#ffd700','#ff3300','#ff9900','#ff66cc','#00cc44','#3399ff'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDuration = (0.8 + Math.random() * 1.4) + 's';
+      p.style.animationDelay = (Math.random() * 0.6) + 's';
+      p.style.width = (8 + Math.random() * 8) + 'px';
+      p.style.height = (10 + Math.random() * 10) + 'px';
+      container.appendChild(p);
+    }
+    setTimeout(() => container.innerHTML = '', 3000);
+  }
+</script>
+</body>
+</html>
